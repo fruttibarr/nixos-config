@@ -1,0 +1,56 @@
+{
+  "_comment": [
+    "Default keybinds: the single source for both hyprland.nix (which binds",
+    "them at startup) and Settings > Keybinds (which rebinds them live and",
+    "writes the user's changes to ~/.config/hypr/settings.lua).",
+    "Each bind runs either `exec` (a shell command) or `dsp` (a Lua",
+    "hl.dsp.* expression). `opts` is an optional Lua table of bind options.",
+    "`keys` is the exact string passed to hl.bind: keep modifiers before the",
+    "key, joined with ' + ', because hl.unbind only matches that same string."
+  ],
+  "groups": ["Shell", "Apps", "Windows", "Focus", "Session"],
+  "workspaces": {
+    "focus": "SUPER",
+    "move": "SUPER + SHIFT"
+  },
+  "binds": [
+    { "id": "launcher", "group": "Shell", "label": "Launcher", "keys": "SUPER + D", "exec": "qs ipc call island launcher" },
+    { "id": "launcher2", "group": "Shell", "label": "Launcher (second key)", "keys": "SUPER + SPACE", "exec": "qs ipc call island launcher" },
+    { "id": "control", "group": "Shell", "label": "Control center", "keys": "SUPER + A", "exec": "qs ipc call island control" },
+    { "id": "settings", "group": "Shell", "label": "Settings", "keys": "SUPER + I", "exec": "qs ipc call island settings" },
+    { "id": "wallpapers", "group": "Shell", "label": "Wallpaper picker", "keys": "SUPER + SHIFT + W", "exec": "qs ipc call island wallpapers" },
+    { "id": "randomWallpaper", "group": "Shell", "label": "Random wallpaper", "keys": "SUPER + W", "exec": "set-wallpaper --random" },
+
+    { "id": "terminal", "group": "Apps", "label": "Terminal", "keys": "SUPER + Return", "exec": "sh -c 'exec kitty -1 2>>\"$HOME/.cache/kitty.log\"'" },
+    { "id": "terminal2", "group": "Apps", "label": "Terminal (second key)", "keys": "SUPER + T", "exec": "sh -c 'exec kitty -1 2>>\"$HOME/.cache/kitty.log\"'" },
+    { "id": "terminalSeparate", "group": "Apps", "label": "Terminal in a separate kitty", "keys": "SUPER + SHIFT + T", "exec": "kitty" },
+    { "id": "fuzzel", "group": "Apps", "label": "Fuzzel (fallback launcher)", "keys": "SUPER + SHIFT + D", "exec": "fuzzel" },
+    { "id": "screenshot", "group": "Apps", "label": "Screenshot a region to the clipboard", "keys": "SUPER + SHIFT + S", "exec": "sh -c 'grim -g \"$(slurp)\" - | wl-copy'" },
+
+    { "id": "close", "group": "Windows", "label": "Close window", "keys": "SUPER + Q", "dsp": "hl.dsp.window.close()" },
+    { "id": "float", "group": "Windows", "label": "Toggle floating", "keys": "SUPER + V", "dsp": "hl.dsp.window.float({ action = \"toggle\" })" },
+    { "id": "fullscreen", "group": "Windows", "label": "Fullscreen", "keys": "SUPER + F", "dsp": "hl.dsp.window.fullscreen()" },
+    { "id": "pseudo", "group": "Windows", "label": "Pseudotile", "keys": "SUPER + P", "dsp": "hl.dsp.window.pseudo()" },
+    { "id": "togglesplit", "group": "Windows", "label": "Toggle split direction", "keys": "SUPER + J", "dsp": "hl.dsp.layout(\"togglesplit\")" },
+
+    { "id": "focusLeft", "group": "Focus", "label": "Focus left", "keys": "SUPER + left", "dsp": "hl.dsp.focus({ direction = \"left\" })" },
+    { "id": "focusRight", "group": "Focus", "label": "Focus right", "keys": "SUPER + right", "dsp": "hl.dsp.focus({ direction = \"right\" })" },
+    { "id": "focusUp", "group": "Focus", "label": "Focus up", "keys": "SUPER + up", "dsp": "hl.dsp.focus({ direction = \"up\" })" },
+    { "id": "focusDown", "group": "Focus", "label": "Focus down", "keys": "SUPER + down", "dsp": "hl.dsp.focus({ direction = \"down\" })" },
+
+    { "id": "lock", "group": "Session", "label": "Lock screen", "keys": "SUPER + L", "exec": "hyprlock" },
+    { "id": "powerMenu", "group": "Session", "label": "Power menu", "keys": "SUPER + SHIFT + E", "exec": "wlogout" },
+    { "id": "exit", "group": "Session", "label": "Exit Hyprland", "keys": "SUPER + SHIFT + Q", "dsp": "hl.dsp.exit()" }
+  ],
+  "reserved": [
+    { "keys": "XF86AudioRaiseVolume", "label": "Volume up" },
+    { "keys": "XF86AudioLowerVolume", "label": "Volume down" },
+    { "keys": "XF86AudioMute", "label": "Mute" },
+    { "keys": "XF86MonBrightnessUp", "label": "Brightness up" },
+    { "keys": "XF86MonBrightnessDown", "label": "Brightness down" },
+    { "keys": "XF86AudioPlay", "label": "Play / pause" },
+    { "keys": "XF86AudioPause", "label": "Play / pause" },
+    { "keys": "XF86AudioNext", "label": "Next track" },
+    { "keys": "XF86AudioPrev", "label": "Previous track" }
+  ]
+}

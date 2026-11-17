@@ -1,0 +1,7 @@
+# nixos-rebuild output
+result
+result-*
+# local backups made while editing
+.backup-*/
+*.bak
+*.bak-*
