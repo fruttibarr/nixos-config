@@ -20,7 +20,8 @@ FocusScope {
     property string page: ""
     readonly property Item currentPage: page === "wifi" ? wifiPage
         : page === "bluetooth" ? btPage
-        : page === "sound" ? soundPage : column
+        : page === "sound" ? soundPage
+        : page === "eq" ? eqPage : column
 
     function openPage(p) {
         page = p;
@@ -29,7 +30,8 @@ FocusScope {
 
     // Esc steps back out of a sub-page before it closes the island.
     Keys.onEscapePressed: {
-        if (page !== "") openPage("");
+        if (page === "eq") openPage("sound");
+        else if (page !== "") openPage("");
         else root.closeRequested();
     }
 
@@ -51,7 +53,8 @@ FocusScope {
     SoundPage {
         id: soundPage
         active: root.page === "sound"
-        x: active ? 18 : root.width + 18
+        // Slides left (not right) when stepping deeper into the equalizer.
+        x: active ? 18 : root.page === "eq" ? -width - 18 : root.width + 18
         y: 18
         width: root.width - 36
         opacity: active ? 1 : 0
@@ -60,6 +63,21 @@ FocusScope {
         Behavior on x { NumberAnimation { duration: 420; easing.type: Easing.OutQuint } }
         Behavior on opacity { NumberAnimation { duration: 220 } }
         onBack: root.openPage("")
+        onOpenEq: root.openPage("eq")
+    }
+
+    EqPage {
+        id: eqPage
+        active: root.page === "eq"
+        x: active ? 18 : root.width + 18
+        y: 18
+        width: root.width - 36
+        opacity: active ? 1 : 0
+        visible: opacity > 0.01
+        enabled: active
+        Behavior on x { NumberAnimation { duration: 420; easing.type: Easing.OutQuint } }
+        Behavior on opacity { NumberAnimation { duration: 220 } }
+        onBack: root.openPage("sound")
     }
 
     BluetoothPage {

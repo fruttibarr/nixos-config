@@ -6,7 +6,9 @@ import "root:/services"
 
 // Wallpaper switcher that the island morphs into.
 //
-//  - type to filter by file or folder name; Tab / Shift+Tab cycle collections
+//  - type to search: names (typo-tolerant), colours ("dark blue") and moods
+//    ("pastel", "warm"); results are ranked. See services/wallsearch.js.
+//    Tab / Shift+Tab cycle collections
 //  - arrows move the highlight, Enter (or click) applies — the island stays
 //    open so you can audition several while the palette re-themes live
 //  - Esc clears the search first, then closes
@@ -24,7 +26,14 @@ FocusScope {
 
     // "all", "recent", or a collection's absolute directory path.
     property string collection: "all"
-    readonly property string query: search.text.trim().toLowerCase()
+    // Debounced: ranking 8k+ wallpapers (with typo matching) on every
+    // keystroke would make typing lag.
+    property string query: ""
+    Timer {
+        id: queryDebounce
+        interval: 110
+        onTriggered: root.query = search.text.trim().toLowerCase()
+    }
 
     function activate() {
         search.text = "";
@@ -45,23 +54,17 @@ FocusScope {
         const c = collection;
         const all = Wallpapers.all;
 
-        if (c === "recent") {
-            return q === "" ? Wallpapers.recent
-                : Wallpapers.recent.filter(p => p.toLowerCase().includes(q));
-        }
-        if (c === "all" && q === "") return all;
+        // Re-rank as colour data streams in during the first index — but
+        // only while searching, so plain browsing isn't reset every few secs.
+        if (q !== "") void Wallpapers.looks;
 
-        const lower = Wallpapers.allLower;
-        const dir = c === "all" ? "" : c + "/";
-        const out = [];
-        for (let i = 0; i < all.length; i++) {
-            const p = all[i];
-            // A collection holds only the images *directly* in its folder.
-            if (dir !== "" && (!p.startsWith(dir) || p.indexOf("/", dir.length) !== -1)) continue;
-            if (q !== "" && !lower[i].includes(q)) continue;
-            out.push(p);
-        }
-        return out;
+        if (c === "recent") return Wallpapers.search(q, Wallpapers.recent);
+        if (c === "all") return Wallpapers.search(q);
+
+        // A collection holds only the images *directly* in its folder.
+        const dir = c + "/";
+        const inDir = all.filter(p => p.startsWith(dir) && p.indexOf("/", dir.length) === -1);
+        return Wallpapers.search(q, inDir);
     }
 
     onItemsChanged: {
@@ -117,6 +120,8 @@ FocusScope {
                 Text {
                     text: Wallpapers.loading ? "Scanning…"
                         : `${root.fmtCount(root.items.length)} of ${root.fmtCount(Wallpapers.all.length)}`
+                          + (Wallpapers.indexing && Wallpapers.all.length
+                             ? ` · indexing colours ${Math.floor(100 * Wallpapers.indexed / Wallpapers.all.length)}%` : "")
                     color: Theme.textSoft
                     font.family: Theme.mono
                     font.pixelSize: 10
@@ -163,6 +168,13 @@ FocusScope {
                             font.family: Theme.sans
                             font.pixelSize: 14
                             clip: true
+                            onTextChanged: {
+                                // Clearing is instant; typing is debounced.
+                                if (text.trim() === "") {
+                                    queryDebounce.stop();
+                                    root.query = "";
+                                } else queryDebounce.restart();
+                            }
 
                             Keys.onPressed: event => {
                                 switch (event.key) {
@@ -190,7 +202,9 @@ FocusScope {
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             visible: search.text.length === 0
-                            text: "Search by name or folder…"
+                            text: "Search by name, colour or mood — try “dark blue”, “pastel”, “warm”…"
+                            elide: Text.ElideRight
+                            width: parent.width
                             color: Theme.textFaint
                             font: search.font
                         }

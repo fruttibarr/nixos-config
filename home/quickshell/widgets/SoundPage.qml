@@ -13,6 +13,7 @@ FocusScope {
 
     property bool active: false
     signal back
+    signal openEq
 
     implicitHeight: column.implicitHeight
 
@@ -158,6 +159,70 @@ FocusScope {
             font.family: Theme.sans
             font.pixelSize: 10
             wrapMode: Text.WordWrap
+        }
+
+        // ---- equalizer entry -------------------------------------------------
+        Rectangle {
+            id: eqRow
+            Layout.fillWidth: true
+            implicitHeight: 52
+            radius: Theme.radiusCard
+            color: eqHover.hovered ? Theme.cardHover : Theme.card
+            Behavior on color {
+                ColorAnimation { duration: 150 }
+            }
+            HoverHandler {
+                id: eqHover
+            }
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.openEq()
+            }
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 12
+                anchors.rightMargin: 14
+                spacing: 12
+                Rectangle {
+                    implicitWidth: 30
+                    implicitHeight: 30
+                    radius: 15
+                    color: SoundEq.enabled ? Colors.primary : Theme.track
+                    Glyph {
+                        anchors.centerIn: parent
+                        text: "󰺢"
+                        size: 15
+                        color: SoundEq.enabled ? Colors.textOnPrimary : Colors.text
+                    }
+                }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 0
+                    Text {
+                        Layout.fillWidth: true
+                        text: "Equalizer"
+                        color: Colors.text
+                        font.family: Theme.sans
+                        font.pixelSize: 13
+                        font.weight: Font.Medium
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: !SoundEq.enabled ? "Off"
+                            : SoundEq.preset === "custom" ? "Custom"
+                            : SoundEq.presets.find(p => p.id === SoundEq.preset).label
+                        color: SoundEq.enabled ? Colors.primary : Theme.textSoft
+                        font.family: Theme.sans
+                        font.pixelSize: 11
+                    }
+                }
+                Glyph {
+                    text: "󰅂"
+                    size: 15
+                    color: Theme.textSoft
+                }
+            }
         }
 
         // ---- input ------------------------------------------------------------

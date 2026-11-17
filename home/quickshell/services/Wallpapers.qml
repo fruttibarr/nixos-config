@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "wallsearch.js" as WS
 
 // Wallpaper library: scanning, thumbnails, current/recent, applying.
 //
@@ -29,6 +30,75 @@ Singleton {
     // Lower-cased paths relative to root, index-aligned with `all`, so
     // search is one cheap pass with no per-keystroke allocation.
     property var allLower: []
+    property var allWords: []       // words of allLower[i], for typo matching
+    property var _pos: ({})         // abs path -> index in `all`
+
+    // ---- colour index (smart search) ------------------------------------------
+    // `wallpaper-colors` (home/quickshell.nix) appends each image's dominant
+    // colours to this file; only new images are processed on later runs.
+    readonly property string colorIndex: Quickshell.cacheDir + "/wallcolors.tsv"
+    property var looks: []          // features per image, aligned with `all` (or null)
+    property int indexed: 0         // images with colour data
+    property bool indexing: false
+
+    Process {
+        id: indexProc
+        command: ["wallpaper-colors", svc.root, svc.colorIndex]
+        onRunningChanged: {
+            svc.indexing = running;
+            if (!running) indexFile.reload();
+        }
+    }
+    // Pick up new rows while a long first run is going.
+    Timer {
+        interval: 4000
+        repeat: true
+        running: svc.indexing
+        onTriggered: indexFile.reload()
+    }
+    FileView {
+        id: indexFile
+        path: svc.colorIndex
+        printErrors: false
+        blockLoading: false
+        onLoaded: svc._applyIndex(text())
+    }
+    property var _indexMap: ({})
+    function _applyIndex(text) {
+        _indexMap = WS.parseIndex(text);
+        _alignLooks();
+    }
+    function _alignLooks() {
+        const prefixLen = svc.root.length + 1;
+        const m = _indexMap;
+        let n = 0;
+        const out = new Array(all.length);
+        for (let i = 0; i < all.length; i++) {
+            const f = m[all[i].slice(prefixLen)] ?? null;
+            out[i] = f;
+            if (f) n++;
+        }
+        looks = out;
+        indexed = n;
+    }
+
+    // Ranked search. `paths` limits it to a subset (a collection or Recent);
+    // omit for the whole library. Returns paths, best match first.
+    function search(query, paths) {
+        const toks = WS.tokens(query);
+        const src = paths ?? all;
+        if (toks.length === 0) return src;
+        const scored = [];
+        for (let k = 0; k < src.length; k++) {
+            const i = _pos[src[k]];
+            if (i === undefined) continue;
+            const s = WS.score(toks, allLower[i], allWords[i], looks[i] ?? null);
+            if (s > 0) scored.push([s, k, src[k]]);
+        }
+        scored.sort((a, b) => (b[0] - a[0]) || (a[1] - b[1]));
+        return scored.map(x => x[2]);
+    }
+    readonly property var examples: WS.EXAMPLES
 
     // ---- current ------------------------------------------------------------
     FileView {
@@ -91,10 +161,14 @@ Singleton {
         const paths = text.split("\n").filter(p => p.length > 0).sort();
         const prefixLen = svc.root.length + 1;
         const lower = new Array(paths.length);
+        const wordsOf = new Array(paths.length);
+        const pos = {};
         const dirs = {};
         for (let i = 0; i < paths.length; i++) {
             const p = paths[i];
             lower[i] = p.slice(prefixLen).toLowerCase();
+            wordsOf[i] = WS.words(lower[i]);
+            pos[p] = i;
             const d = p.slice(0, p.lastIndexOf("/"));
             dirs[d] = (dirs[d] ?? 0) + 1;
         }
@@ -108,10 +182,15 @@ Singleton {
             };
         });
         allLower = lower;
+        allWords = wordsOf;
+        _pos = pos;
         all = paths;
         collections = cols;
         missing = paths.length === 0;
         loading = false;
+        _alignLooks();
+        // Index anything new in the background (a no-op when up to date).
+        if (!missing && !indexProc.running) indexProc.running = true;
     }
 
     // ---- thumbnails ---------------------------------------------------------

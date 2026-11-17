@@ -52,8 +52,10 @@ Singleton {
     // Hardware outputs/inputs (not app streams). A headphone jack is a *port*
     // on the same card and PipeWire switches it on its own; HDMI/DP audio and
     // Bluetooth headsets show up here as separate devices.
+    // The equalizer's smart-filter sink (equalizer.nix) is plumbing, not a
+    // device you'd pick, so it's left out.
     readonly property var sinks: Pipewire.nodes.values
-        .filter(n => n.isSink && !n.isStream && n.audio)
+        .filter(n => n.isSink && !n.isStream && n.audio && n.name !== "effect_input.eq")
     readonly property var sources: Pipewire.nodes.values
         .filter(n => !n.isSink && !n.isStream && n.audio)
 

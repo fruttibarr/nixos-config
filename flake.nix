@@ -37,6 +37,7 @@
         modules = [
           ./configuration.nix
           ./horizon.nix
+          ./equalizer.nix
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;

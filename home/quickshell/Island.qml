@@ -102,6 +102,9 @@ Scope {
         function sound(): void {
             ShellState.openControlPage("sound", Hyprland.focusedMonitor?.name ?? "");
         }
+        function equalizer(): void {
+            ShellState.openControlPage("eq", Hyprland.focusedMonitor?.name ?? "");
+        }
         // Brightness keys call this after brightnessctl so the OSD shows.
         function brightness(): void {
             Brightness.refresh(true);

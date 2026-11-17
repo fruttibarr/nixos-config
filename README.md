@@ -45,6 +45,14 @@ and sound each have their own page inside it.
 
 <p align="center"><img src="screenshots/control-center.jpg" width="400"></p>
 
+The Sound page also has a proper 5-band equalizer that applies to every app.
+It's a PipeWire filter-chain (`equalizer.nix`) that slots in front of
+whatever output you're using, so volume keys and switching to headphones
+still just work. Boosting a band automatically turns the preamp down so
+nothing clips. `qs ipc call eq preset bass` works too if you want it on a key.
+
+<p align="center"><img src="screenshots/equalizer.png" width="400"></p>
+
 ### Settings (`Super+I`)
 
 A real settings app for Hyprland: gaps, borders, rounding, animations,
@@ -56,9 +64,17 @@ you just press the new combo. Changes apply instantly and get saved to
 
 ### Wallpapers (`Super+Shift+W`)
 
-Browses everything in `~/Pictures/Wallpapers`, grouped by folder, with search.
-Picking one re-themes the whole system (island, Hyprland borders, kitty, lock
-screen) to match. `Super+W` picks a random one.
+Browses everything in `~/Pictures/Wallpapers`, grouped by folder. Picking one
+re-themes the whole system (island, Hyprland borders, kitty, lock screen) to
+match. `Super+W` picks a random one.
+
+The search is the part I'm happiest with. It doesn't just match file names
+(which are mostly junk like `wallhaven-6lpm2w`). It knows what each
+wallpaper *looks* like, so you can type `dark blue`, `pink`, `pastel`, `warm`
+or `neon` and get exactly that. Typos are fine too (`outrn wave` still finds
+`outrun_wave`). The colours come from a little background indexer
+(`wallpaper-colors`) that runs once over the whole folder and then only
+looks at new files.
 
 <p align="center"><img src="screenshots/wallpapers.jpg" width="720"></p>
 
